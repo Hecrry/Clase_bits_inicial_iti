@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bits — Clase Interactiva</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #0f1117; --bg2: #1a1d27; --bg3: #22263a;
+  --border: rgba(255,255,255,0.08); --border2: rgba(255,255,255,0.15);
+  --text: #e8eaf0; --muted: #8b90a0;
+  --green: #1fcb8a; --green-bg: rgba(31,203,138,0.12);
+  --blue: #4d9fff; --blue-bg: rgba(77,159,255,0.12);
+  --amber: #f5a623; --amber-bg: rgba(245,166,35,0.12);
+  --red: #ff5f6d; --mono: 'Courier New', monospace;
+}
+html, body { height: 100%; overflow: hidden; }
+body {
+  background: var(--bg); color: var(--text);
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  display: flex; flex-direction: column;
+}
+
+/* ── HEADER ── */
+header {
+  background: var(--bg2); border-bottom: 1px solid var(--border);
+  padding: 0.6rem 2rem; display: flex; align-items: center; justify-content: space-between;
+  flex-shrink: 0;
+}
+header h1 { font-size: 1.15rem; font-weight: 600; color: var(--green); }
+header p  { font-size: 0.8rem; color: var(--muted); }
+
+/* ── TABS ── */
+.tabs {
+  display: flex; gap: 4px; padding: 0.5rem 2rem 0;
+  background: var(--bg2); border-bottom: 1px solid var(--border); flex-shrink: 0;
+}
+.tab {
+  padding: 0.5rem 1.6rem; border-radius: 8px 8px 0 0;
+  border: 1px solid transparent; background: transparent;
+  color: var(--muted); font-size: 0.95rem; cursor: pointer;
+  transition: all 0.15s; font-family: inherit;
+}
+.tab:hover { color: var(--text); background: var(--bg3); }
+.tab.active {
+  background: var(--bg); border-color: var(--border);
+  border-bottom-color: var(--bg); color: var(--text); font-weight: 600;
+}
+
+/* ── MAIN SCROLLABLE AREA ── */
+.main {
+  flex: 1; overflow-y: auto; padding: 1.2rem 2rem;
+  display: flex; flex-direction: column;
+}
+.section { display: none; flex: 1; flex-direction: column; }
+.section.active { display: flex; }
+
+/* ── SHARED ── */
+.card {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 14px; padding: 1.4rem 1.6rem; height: 100%;
+}
+.card h2 {
+  font-size: 0.75rem; color: var(--muted); text-transform: uppercase;
+  letter-spacing: 0.08em; margin-bottom: 1rem; font-weight: 500;
+}
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; flex: 1; }
+.three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.2rem; flex: 1; }
+
+/* ── S1 ── */
+.bulbs { display: flex; gap: 10px; justify-content: center; flex-wrap: nowrap; margin: 1.4rem 0; }
+.bulb-wrap { text-align: center; }
+.bulb {
+  width: 64px; height: 64px; border-radius: 50%;
+  border: 2px solid var(--border2); background: var(--bg3);
+  font-size: 28px; display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: all 0.2s; user-select: none;
+}
+.bulb.on { background: rgba(245,166,35,0.2); border-color: var(--amber); box-shadow: 0 0 18px rgba(245,166,35,0.3); }
+.bulb-digit { font-size: 1.1rem; font-weight: 700; margin-top: 5px; font-family: var(--mono); color: var(--muted); }
+#bulb-result {
+  text-align: center; padding: 1rem; background: var(--bg3);
+  border-radius: 10px; margin-top: 1rem;
+  font-family: var(--mono); font-size: 1.1rem; color: var(--green);
+}
+.analogy-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.ana { background: var(--bg3); border-radius: 10px; padding: 12px 16px; }
+.ana .lbl { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+.ana .chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.chip { padding: 4px 12px; border-radius: 99px; font-size: 13px; font-weight: 600; }
+.chip0 { background: rgba(139,144,160,0.2); color: var(--muted); }
+.chip1 { background: var(--green-bg); color: var(--green); }
+.byte-info { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-top: 1rem; }
+.binfo { background: var(--bg3); border-radius: 10px; padding: 14px; text-align: center; }
+.binfo .val { font-size: 1.6rem; font-weight: 700; color: var(--blue); }
+.binfo .lbl { font-size: 12px; color: var(--muted); margin-top: 6px; }
+.s1-right { display: flex; flex-direction: column; gap: 1.2rem; height: 100%; }
+
+/* ── S2 ── */
+.dec-big { font-size: 6rem; font-weight: 700; text-align: center; color: var(--text); line-height: 1; }
+.bin-big { font-size: 2.6rem; font-weight: 700; text-align: center; color: var(--green); font-family: var(--mono); letter-spacing: 8px; margin: 0.6rem 0; }
+.unit-label { text-align: center; font-size: 0.85rem; color: var(--muted); }
+input[type=range] {
+  width: 100%; height: 8px; margin: 1.4rem 0 0.5rem;
+  -webkit-appearance: none; background: var(--bg3); border-radius: 99px; outline: none;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 24px; height: 24px;
+  border-radius: 50%; background: var(--green); cursor: pointer;
+}
+.slider-ends { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); }
+.breakdown { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 1.4rem; }
+.bc { text-align: center; }
+.bv {
+  width: 52px; height: 52px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.3rem; font-weight: 700; font-family: var(--mono);
+  border: 1px solid var(--border);
+}
+.bv1 { background: var(--green-bg); border-color: var(--green); color: var(--green); }
+.bv0 { background: var(--bg3); color: var(--muted); }
+.bpow { font-size: 11px; color: var(--muted); margin-top: 5px; }
+.bnum { font-size: 13px; font-weight: 700; color: var(--green); margin-top: 3px; min-height: 18px; }
+.conv-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 1rem;
+}
+.conv-row:last-of-type { border-bottom: none; }
+.conv-num { font-family: var(--mono); font-weight: 700; color: var(--blue); min-width: 50px; font-size: 1.1rem; }
+.conv-op  { color: var(--muted); font-size: 0.9rem; flex: 1; }
+.conv-bit { font-family: var(--mono); font-weight: 700; font-size: 1.2rem; }
+.conv-bit.b1 { color: var(--green); }
+.conv-bit.b0 { color: var(--muted); }
+
+/* ── S3 ── */
+.op-btns { display: flex; gap: 8px; margin-bottom: 1.2rem; flex-wrap: wrap; flex-shrink: 0; }
+.op-btn {
+  padding: 0.55rem 1.4rem; border-radius: 8px;
+  border: 1px solid var(--border2); background: var(--bg2);
+  color: var(--muted); font-size: 0.95rem; cursor: pointer;
+  font-family: inherit; transition: all 0.15s;
+}
+.op-btn:hover { background: var(--bg3); color: var(--text); }
+.op-btn.active { background: var(--blue-bg); border-color: var(--blue); color: var(--blue); font-weight: 600; }
+.op-desc {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 12px; padding: 1rem 1.4rem; margin-bottom: 1rem;
+  font-size: 0.95rem; line-height: 1.7; color: var(--muted);
+}
+.op-desc strong { color: var(--text); }
+table { width: 100%; border-collapse: collapse; font-family: var(--mono); }
+th { font-family: 'Segoe UI',sans-serif; font-size: 12px; color: var(--muted); text-transform: uppercase; padding: 10px 14px; border-bottom: 1px solid var(--border2); text-align: center; }
+td { text-align: center; padding: 12px 14px; border-bottom: 1px solid var(--border); font-size: 1.1rem; }
+tr.hl td { background: var(--green-bg); color: var(--green); font-weight: 700; }
+tr.hl.blue td { background: var(--blue-bg); color: var(--blue); }
+tr.hl.amber td { background: var(--amber-bg); color: var(--amber); }
+.bw-row { display: flex; align-items: center; gap: 14px; margin-bottom: 10px; }
+.bw-lbl { font-size: 13px; color: var(--muted); width: 90px; text-align: right; }
+.bw-bits { display: flex; gap: 6px; }
+.bbit { width: 44px; height: 44px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-weight: 700; font-size: 1.1rem; }
+.bbit1  { background: var(--green-bg); color: var(--green); border: 1px solid rgba(31,203,138,0.3); }
+.bbit0  { background: var(--bg3); color: var(--muted); border: 1px solid var(--border); }
+.bbitr1 { background: var(--blue-bg); color: var(--blue); border: 1px solid rgba(77,159,255,0.3); }
+.bbitr0 { background: var(--bg3); color: var(--muted); border: 1px solid var(--border); }
+.bw-sep { height: 1px; background: var(--border2); margin: 8px 0 8px 104px; }
+
+/* ── S4 ── */
+.s4-layout { display: grid; grid-template-columns: 280px 1fr; gap: 1.2rem; flex: 1; }
+.app-list { display: flex; flex-direction: column; gap: 8px; }
+.app-item {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 12px; padding: 1rem 1.3rem; cursor: pointer; transition: all 0.15s;
+}
+.app-item:hover { border-color: var(--border2); }
+.app-item.active { border-color: var(--blue); background: var(--blue-bg); }
+.app-item .name { font-weight: 600; font-size: 1rem; }
+.app-item .trick { font-family: var(--mono); font-size: 0.85rem; color: var(--green); margin-top: 5px; }
+.app-detail { background: var(--bg2); border: 1px solid var(--border); border-radius: 14px; padding: 1.6rem; height: 100%; }
+.app-detail h2 { font-size: 1.2rem; margin-bottom: 0.9rem; }
+.app-detail p { color: var(--muted); font-size: 0.95rem; line-height: 1.8; margin-bottom: 1.2rem; }
+.code {
+  background: var(--bg); border: 1px solid var(--border2);
+  border-radius: 10px; padding: 1.2rem 1.4rem;
+  font-family: var(--mono); font-size: 0.95rem; line-height: 2; color: var(--green);
+}
+.demo-row { display: flex; gap: 10px; margin-top: 1.2rem; flex-wrap: wrap; }
+.demo-pill {
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 8px; padding: 8px 16px; font-family: var(--mono); font-size: 0.9rem;
+}
+.demo-pill .num { color: var(--blue); font-weight: 700; }
+.demo-pill .res { font-weight: 700; }
+</style>
+</head>
+<body>
+
+<header>
+  <div><h1>⚡ Bits y Operaciones Binarias</h1><p>Programación Competitiva · Grado 11</p></div>
+  <div style="font-size:0.85rem;color:var(--muted)">Navega con las pestañas</div>
+</header>
+
+<div class="tabs">
+  <button class="tab active" onclick="show(0)">1 · ¿Qué es un bit?</button>
+  <button class="tab" onclick="show(1)">2 · Sistema binario</button>
+  <button class="tab" onclick="show(2)">3 · Operaciones bit a bit</button>
+
+</div>
+
+<div class="main">
+
+<!-- S1 -->
+<div class="section active" id="sec0">
+  <div style="display:grid;grid-template-columns:1fr 420px;gap:1.2rem;flex:1">
+    <div class="card">
+      <h2>Haz clic en los focos para encenderlos</h2>
+      <div class="bulbs" id="bulbs"></div>
+      <div id="bulb-result">bits: 0 0 0 0 0 0 0 0 → decimal: 0</div>
+      <div class="byte-info" style="margin-top:1.4rem">
+        <div class="binfo"><div class="val">8</div><div class="lbl">bits = 1 byte</div></div>
+        <div class="binfo"><div class="val">256</div><div class="lbl">valores con 8 bits (2⁸)</div></div>
+        <div class="binfo"><div class="val">1 024</div><div class="lbl">bytes = 1 KB</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Un bit = solo dos estados posibles</h2>
+      <p style="color:var(--muted);font-size:1rem;line-height:1.8;margin-bottom:1.4rem">
+        Un <strong style="color:var(--text)">bit</strong> es la unidad mínima de información en computación.
+        Solo puede tener dos valores: <strong style="color:var(--amber)">0</strong> (apagado) o
+        <strong style="color:var(--green)">1</strong> (encendido).<br><br>
+        Todo lo que existe en un computador — texto, imágenes, videos, código —
+        es en el fondo una larga secuencia de bits.
+      </p>
+      <div class="analogy-grid">
+        <div class="ana"><div class="lbl">💡 Luz</div><div class="chips"><span class="chip chip0">Apagada = 0</span><span class="chip chip1">Encendida = 1</span></div></div>
+        <div class="ana"><div class="lbl">🔌 Corriente</div><div class="chips"><span class="chip chip0">Sin señal = 0</span><span class="chip chip1">Con señal = 1</span></div></div>
+        <div class="ana"><div class="lbl">🔘 Interruptor</div><div class="chips"><span class="chip chip0">Abierto = 0</span><span class="chip chip1">Cerrado = 1</span></div></div>
+        <div class="ana"><div class="lbl">✅ Lógica</div><div class="chips"><span class="chip chip0">false = 0</span><span class="chip chip1">true = 1</span></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- S2 -->
+<div class="section" id="sec1">
+  <div class="two-col">
+    <div class="card">
+      <h2>Mueve el slider — decimal a binario</h2>
+      <div class="dec-big" id="dec-val">42</div>
+      <div class="unit-label">decimal</div>
+      <div class="bin-big" id="bin-val">00101010</div>
+      <div class="unit-label">binario</div>
+      <input type="range" min="0" max="255" value="42" id="slider" oninput="updateBin(+this.value)">
+      <div class="slider-ends"><span>0</span><span>255</span></div>
+      <div class="breakdown" id="breakdown"></div>
+    </div>
+    <div class="card">
+      <h2>Pasos: división sucesiva entre 2</h2>
+      <p style="color:var(--muted);font-size:0.9rem;margin-bottom:1rem;line-height:1.7">
+        Divide entre 2 repetidamente. Los restos leídos <strong style="color:var(--text)">de abajo hacia arriba</strong> forman el binario.
+      </p>
+      <div id="conv-steps"></div>
+    </div>
+  </div>
+</div>
+
+<!-- S3 -->
+<div class="section" id="sec2">
+  <div class="op-btns">
+    <button class="op-btn active" onclick="setOp('AND')">AND &amp;</button>
+    <button class="op-btn" onclick="setOp('OR')">OR |</button>
+    <button class="op-btn" onclick="setOp('XOR')">XOR ^</button>
+    <button class="op-btn" onclick="setOp('NOT')">NOT ~</button>
+    <button class="op-btn" onclick="setOp('SHL')">Left Shift &lt;&lt;</button>
+    <button class="op-btn" onclick="setOp('SHR')">Right Shift &gt;&gt;</button>
+  </div>
+  <div class="two-col">
+    <div class="card">
+      <div class="op-desc" id="op-desc"></div>
+      <table id="truth-tbl"></table>
+    </div>
+    <div class="card">
+      <h2>Pruébalo tú — elige los números</h2>
+      <div style="display:flex;gap:1rem;margin-bottom:1.2rem;align-items:flex-end">
+        <div style="flex:1">
+          <label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:6px">Número A (0–255)</label>
+          <input id="input-a" type="number" min="0" max="255" value="181" oninput="renderDemo()"
+            style="width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:10px 14px;color:var(--text);font-size:1.1rem;font-family:var(--mono);outline:none">
+        </div>
+        <div style="flex:1" id="input-b-wrap">
+          <label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:6px">Número B (0–255)</label>
+          <input id="input-b" type="number" min="0" max="255" value="206" oninput="renderDemo()"
+            style="width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:10px 14px;color:var(--text);font-size:1.1rem;font-family:var(--mono);outline:none">
+        </div>
+        <div style="flex:1;display:none" id="input-shift-wrap">
+          <label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:6px">Posiciones (1–7)</label>
+          <input id="input-shift" type="number" min="1" max="7" value="2" oninput="renderDemo()"
+            style="width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:10px 14px;color:var(--text);font-size:1.1rem;font-family:var(--mono);outline:none">
+        </div>
+      </div>
+      <div id="bw-demo" style="margin-top:0.5rem"></div>
+    </div>
+  </div>
+</div>
+
+
+
+</div><!-- .main -->
+
+<script>
+const apps = [
+  { name:'Par o impar con n & 1',
+    desc:'El último bit de cualquier entero indica su paridad: 1 → impar, 0 → par. Es más rápido que el operador módulo %.',
+    code:`if (n & 1) {\n  cout << "impar";\n} else {\n  cout << "par";\n}`,
+    demos:[1,2,3,7,8,12,15].map(n=>({num:n,res:(n&1)?'impar':'par',color:(n&1)?'var(--amber)':'var(--green)'}))
+  },
+  { name:'¿Es n potencia de 2?',
+    desc:'Las potencias de 2 tienen exactamente un bit en 1. n & (n−1) borra ese bit; si el resultado es 0, era potencia de 2.',
+    code:`bool esPot2(int n) {\n  return n > 0 && (n & (n-1)) == 0;\n}\n// 8=1000, 7=0111 → 8&7=0 ✓\n// 6=110,  5=101 → 6&5=4 ✗`,
+    demos:[1,2,4,8,16,3,6,10].map(n=>({num:n,res:(n>0&&(n&(n-1))===0)?'✓ sí':'✗ no',color:(n>0&&(n&(n-1))===0)?'var(--green)':'var(--red)'}))
+  },
+  { name:'Activar y apagar un bit específico',
+    desc:'Con OR activamos el bit i (lo forzamos a 1). Con AND + NOT lo apagamos (lo forzamos a 0). Con XOR lo alternamos entre 0 y 1.',
+    code:`int n = 0b00000000;\nn |=  (1 << 3);  // activa bit 3 → 00001000\nn &= ~(1 << 3);  // apaga  bit 3 → 00000000\nn ^=  (1 << 5);  // alterna bit 5 → 00100000`,
+    demos:[]
+  },
+  { name:'Subconjuntos con bitmask',
+    desc:'Con n elementos hay 2ⁿ subconjuntos. Cada número de 0 a 2ⁿ−1 representa uno: el bit i indica si el elemento i está incluido.',
+    code:`int n = 3; // elementos: {A, B, C}\nfor (int mask = 0; mask < (1 << n); mask++) {\n  for (int i = 0; i < n; i++)\n    if (mask & (1 << i))\n      cout << elementos[i];\n  cout << endl;\n}\n// {} {A} {B} {AB} {C} {AC} {BC} {ABC}`,
+    demos:[]
+  },
+  { name:'Swap sin variable auxiliar',
+    desc:'XOR aplicado tres veces intercambia dos variables sin necesitar una temporal. Funciona porque x^x=0 y x^0=x.',
+    code:`int a = 5, b = 9;\na ^= b;  // a = 5^9 = 12\nb ^= a;  // b = 9^12 = 5  ← b tiene el original de a\na ^= b;  // a = 12^5 = 9  ← a tiene el original de b\n// resultado: a=9, b=5`,
+    demos:[]
+  },
+  { name:'Multiplicar y dividir por 2',
+    desc:'Shift izquierdo multiplica por 2 por cada posición. Shift derecho divide entre 2 (entero). Son las operaciones aritméticas más rápidas en hardware.',
+    code:`int n = 13;\ncout << (n << 1); // 26  (13 × 2)\ncout << (n << 2); // 52  (13 × 4)\ncout << (n >> 1); // 6   (13 / 2)\ncout << (n >> 2); // 3   (13 / 4)`,
+    demos:[1,3,5,7,10,13,20,100].map(n=>({num:n,res:`×2=${n<<1} /2=${n>>1}`,color:'var(--blue)'}))
+  }
+];
+
+const opData = {
+  AND:{ desc:'<strong>AND (&)</strong> — Resultado 1 solo si <strong>ambos</strong> bits son 1. Se usa para verificar o leer bits individuales con una máscara.',
+        rows:[['A','B','A & B'],['0','0','0'],['0','1','0'],['1','0','0'],['1','1','1']], hl:[4],hlClass:'',
+        a:0b10110101,b:0b11001110,op:(a,b)=>a&b },
+  OR:{  desc:'<strong>OR (|)</strong> — Resultado 1 si <strong>al menos uno</strong> es 1. Se usa para activar bits.',
+        rows:[['A','B','A | B'],['0','0','0'],['0','1','1'],['1','0','1'],['1','1','1']], hl:[2,3,4],hlClass:'blue',
+        a:0b10110101,b:0b11001110,op:(a,b)=>a|b },
+  XOR:{ desc:'<strong>XOR (^)</strong> — Resultado 1 si los bits son <strong>distintos</strong>. Clave para swap, cifrado y detección de diferencias.',
+        rows:[['A','B','A ^ B'],['0','0','0'],['0','1','1'],['1','0','1'],['1','1','0']], hl:[2,3],hlClass:'amber',
+        a:0b10110101,b:0b11001110,op:(a,b)=>a^b },
+  NOT:{ desc:'<strong>NOT (~)</strong> — Invierte todos los bits. 0 → 1 y 1 → 0.',
+        rows:[['A','~A'],['0','1'],['1','0']], hl:[],hlClass:'',
+        a:0b10110101,b:null,op:a=>(~a)&0xFF },
+  SHL:{ desc:'<strong>Left Shift (&lt;&lt;)</strong> — Desplaza bits a la izquierda. Cada posición equivale a multiplicar por 2.',
+        rows:[['n','n << 1','n << 2'],[1,2,4],[5,10,20],[13,26,52]], hl:[],hlClass:'',a:13,b:null,op:null },
+  SHR:{ desc:'<strong>Right Shift (&gt;&gt;)</strong> — Desplaza bits a la derecha. Cada posición equivale a dividir entre 2 (entero).',
+        rows:[['n','n >> 1','n >> 2'],[100,50,25],[13,6,3],[7,3,1]], hl:[],hlClass:'',a:100,b:null,op:null }
+};
+
+// Bulbs
+(function(){
+  const row=document.getElementById('bulbs');
+  for(let i=0;i<8;i++){
+    const w=document.createElement('div'); w.className='bulb-wrap';
+    const b=document.createElement('div'); b.className='bulb off'; b.textContent='💡';
+    const d=document.createElement('div'); d.className='bulb-digit'; d.textContent='0';
+    b.onclick=()=>{
+      b.classList.toggle('on'); b.classList.toggle('off');
+      d.textContent=b.classList.contains('on')?'1':'0';
+      d.style.color=b.classList.contains('on')?'var(--amber)':'var(--muted)';
+      const bits=[...document.querySelectorAll('.bulb')].map(x=>x.classList.contains('on')?1:0);
+      document.getElementById('bulb-result').textContent='bits: '+bits.join(' ')+' → decimal: '+parseInt(bits.join(''),2);
+    };
+    w.appendChild(b); w.appendChild(d); row.appendChild(w);
+  }
+})();
+
+function updateBin(v){
+  document.getElementById('dec-val').textContent=v;
+  const bin=v.toString(2).padStart(8,'0');
+  document.getElementById('bin-val').textContent=bin;
+  const bd=document.getElementById('breakdown'); bd.innerHTML='';
+  for(let i=0;i<8;i++){
+    const b=bin[i],pow=7-i;
+    const col=document.createElement('div'); col.className='bc';
+    col.innerHTML='<div class="bv '+(b==='1'?'bv1':'bv0')+'">'+b+'</div><div class="bpow">2<sup>'+pow+'</sup></div><div class="bnum">'+(b==='1'?Math.pow(2,pow):'')+'</div>';
+    bd.appendChild(col);
+  }
+  const cs=document.getElementById('conv-steps'); cs.innerHTML='';
+  let steps=[]; let tmp=v;
+  if(tmp===0) steps.push({n:0,q:0,r:0});
+  else while(tmp>0){steps.push({n:tmp,q:Math.floor(tmp/2),r:tmp%2});tmp=Math.floor(tmp/2);}
+  steps.forEach(s=>{
+    const row=document.createElement('div'); row.className='conv-row';
+    row.innerHTML='<span class="conv-num">'+s.n+'</span><span class="conv-op">÷ 2 = '+s.q+', resto</span><span class="conv-bit '+(s.r?'b1':'b0')+'">'+s.r+'</span>';
+    cs.appendChild(row);
+  });
+  if(steps.length>1){
+    const note=document.createElement('p');
+    note.style.cssText='font-size:13px;color:var(--muted);margin-top:12px;';
+    note.textContent='Leer de abajo hacia arriba → '+(bin.replace(/^0+/,'')||'0');
+    cs.appendChild(note);
+  }
+}
+
+let currentOp = 'AND';
+
+function setOp(op){
+  currentOp = op;
+  document.querySelectorAll('.op-btn').forEach(b=>{
+    const t=b.getAttribute('onclick')||'';
+    b.classList.toggle('active',t.includes("'"+op+"'"));
+  });
+  const o=opData[op];
+  document.getElementById('op-desc').innerHTML=o.desc;
+  let html='<tr>'+o.rows[0].map(h=>'<th>'+h+'</th>').join('')+'</tr>';
+  o.rows.slice(1).forEach((r,i)=>{
+    const cls=o.hl.includes(i+1)?(o.hlClass?'hl '+o.hlClass:'hl'):'';
+    html+='<tr class="'+cls+'">'+r.map(c=>'<td>'+c+'</td>').join('')+'</tr>';
+  });
+  document.getElementById('truth-tbl').innerHTML=html;
+  // show/hide inputs depending on op
+  const bWrap=document.getElementById('input-b-wrap');
+  const sWrap=document.getElementById('input-shift-wrap');
+  if(op==='NOT'){ bWrap.style.display='none'; sWrap.style.display='none'; }
+  else if(op==='SHL'||op==='SHR'){ bWrap.style.display='none'; sWrap.style.display='flex'; sWrap.style.flex='1'; }
+  else { bWrap.style.display='block'; sWrap.style.display='none'; }
+  renderDemo();
+}
+
+function clamp(v,mn,mx){ return Math.max(mn,Math.min(mx,isNaN(v)?0:v)); }
+
+function renderDemo(){
+  const op=currentOp;
+  const demo=document.getElementById('bw-demo'); demo.innerHTML='';
+  const a=clamp(+document.getElementById('input-a').value,0,255);
+  const b=clamp(+document.getElementById('input-b').value,0,255);
+  const sh=clamp(+document.getElementById('input-shift').value,1,7);
+
+  if(op==='AND'||op==='OR'||op==='XOR'){
+    const ops={AND:(a,b)=>a&b,OR:(a,b)=>a|b,XOR:(a,b)=>a^b};
+    const res=ops[op](a,b);
+    demo.innerHTML=bwRow('A = '+a,a.toString(2).padStart(8,'0'),false)+
+      bwRow('B = '+b,b.toString(2).padStart(8,'0'),false)+
+      '<div class="bw-sep"></div>'+
+      bwRow(op+' = '+res,res.toString(2).padStart(8,'0'),true);
+  } else if(op==='NOT'){
+    const res=(~a)&0xFF;
+    demo.innerHTML=bwRow('A = '+a,a.toString(2).padStart(8,'0'),false)+
+      '<div class="bw-sep"></div>'+
+      bwRow('~A = '+res,res.toString(2).padStart(8,'0'),true);
+  } else {
+    const sym=op==='SHL'?'<<':'>>';
+    const ops2=['n', 'n '+sym+' 1', 'n '+sym+' '+sh];
+    const vals=op==='SHL'
+      ? [a, (a<<1)&0xFF, (a<<sh)&0xFF]
+      : [a, a>>1, a>>sh];
+    vals.forEach((v,i)=>{
+      const row=document.createElement('div'); row.className='bw-row';
+      row.innerHTML='<span class="bw-lbl" style="font-family:var(--mono);width:110px">'+ops2[i]+'</span>'+
+        '<div class="bw-bits">'+v.toString(2).padStart(8,'0').split('').map(b=>'<div class="bbit '+(i===0?b==='1'?'bbit1':'bbit0':b==='1'?'bbitr1':'bbitr0')+'">'+b+'</div>').join('')+'</div>'+
+        '<span style="font-family:var(--mono);font-size:1rem;color:var(--blue);margin-left:10px">= '+v+'</span>';
+      demo.appendChild(row);
+    });
+  }
+}
+
+function bwRow(label,bits,isRes){
+  return '<div class="bw-row"><span class="bw-lbl">'+label+'</span><div class="bw-bits">'+
+    bits.split('').map(b=>'<div class="bbit '+(isRes?(b==='1'?'bbitr1':'bbitr0'):(b==='1'?'bbit1':'bbit0'))+'">'+b+'</div>').join('')+
+    '</div></div>';
+}
+
+function setApp(i){
+  document.querySelectorAll('.app-item').forEach((el,j)=>el.classList.toggle('active',i===j));
+  const a=apps[i];
+  let demosHtml=a.demos.length?'<div class="demo-row">'+a.demos.map(d=>'<div class="demo-pill"><span class="num">'+d.num+'</span> → <span class="res" style="color:'+d.color+'">'+d.res+'</span></div>').join('')+'</div>':'';
+  document.getElementById('app-area').innerHTML=
+    '<div class="app-detail"><h2>'+a.name+'</h2><p>'+a.desc+'</p>'+
+    '<div class="code">'+a.code.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>')+'</div>'+demosHtml+'</div>';
+}
+
+function show(n){
+  document.querySelectorAll('.section').forEach((s,i)=>s.classList.toggle('active',i===n));
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',i===n));
+  if(n===1) updateBin(42);
+  if(n===2) renderDemo(); // don't reset op, just re-render with current values
+  if(n===3) setApp(0);
+}
+
+setOp('AND'); setApp(0); updateBin(42);
+// also wire show(2) to not re-init op
+
+</script>
+</body>
+</html>
